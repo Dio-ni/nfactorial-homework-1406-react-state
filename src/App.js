@@ -42,6 +42,7 @@ function App() {
 
   const [filterType, setFilterType] = useState("");
 
+  const [search,setSearch]=useState("");
   const handleChangeItem = (event) => {
     setItemToAdd(event.target.value);
   };
@@ -57,9 +58,16 @@ function App() {
       { label: itemToAdd, key: uuidv4() },
       ...prevItems,
     ]);
-
     setItemToAdd("");
   };
+  const handleDeleteItem =({key})=>{
+     const itemIndex = items.findIndex((item) => item.key === key);
+     const leftSideOfAnArray = items.slice(0, itemIndex);
+     const rightSideOfAnArray = items.slice(itemIndex + 1, items.length);
+     setItems([...leftSideOfAnArray, ...rightSideOfAnArray]);
+     
+
+  }
 
   const handleItemDone = ({ key }) => {
     //first way
@@ -86,21 +94,40 @@ function App() {
       })
     );
   };
-
+  const handleImportant =({key})=>{
+    setItems((prevItems) =>
+    prevItems.map((item) => {
+      if (item.key === key) {
+        return { ...item, status: !item.status };
+      } else return item;
+    })
+  );
+  }
+  const handleEnter =(event)=>{
+    if(event.key ==='Enter'){
+      handleAddItem(event.target.value);
+    }
+  }
   const handleFilterItems = (type) => {
     setFilterType(type);
   };
+  
+  const handleSearch=(value)=>{
+    setSearch(value);
+    console.log(items.find((item)=>item.label.includes(search)))
+  }
 
   const amountDone = items.filter((item) => item.done).length;
 
   const amountLeft = items.length - amountDone;
 
   const filteredItems =
-    !filterType || filterType === "all"
+    !filterType || filterType === "all" 
       ? items
       : filterType === "active"
       ? items.filter((item) => !item.done)
-      : items.filter((item) => item.done);
+      :items.filter((item) => item.done)
+  const searchFiltered = filteredItems.filter((item)=>item.label.toLowerCase().includes(search.toLowerCase()));
 
   return (
     <div className="todo-app">
@@ -118,6 +145,7 @@ function App() {
           type="text"
           className="form-control search-input"
           placeholder="type to search"
+          onChange={(e)=>handleSearch(e.target.value)}
         />
         {/* Item-status-filter */}
         <div className="btn-group">
@@ -138,10 +166,10 @@ function App() {
 
       {/* List-group */}
       <ul className="list-group todo-list">
-        {filteredItems.length > 0 &&
-          filteredItems.map((item) => (
+        {searchFiltered.length > 0 &&
+          searchFiltered.map((item) => (
             <li key={item.key} className="list-group-item">
-              <span className={`todo-list-item${item.done ? " done" : ""}`}>
+              <span className={`todo-list-item${item.done ? " done" : "" } ${item.status ? "text-info": ""}`}>
                 <span
                   className="todo-list-item-label"
                   onClick={() => handleItemDone(item)}
@@ -152,6 +180,7 @@ function App() {
                 <button
                   type="button"
                   className="btn btn-outline-success btn-sm float-right"
+                  onClick={()=>handleImportant(item)}
                 >
                   <i className="fa fa-exclamation" />
                 </button>
@@ -159,6 +188,7 @@ function App() {
                 <button
                   type="button"
                   className="btn btn-outline-danger btn-sm float-right"
+                  onClick={()=>handleDeleteItem(item)}
                 >
                   <i className="fa fa-trash-o" />
                 </button>
@@ -175,6 +205,7 @@ function App() {
           className="form-control"
           placeholder="What needs to be done"
           onChange={handleChangeItem}
+          onKeyDown={(e)=>handleEnter(e)}
         />
         <button className="btn btn-outline-secondary" onClick={handleAddItem}>
           Add item
