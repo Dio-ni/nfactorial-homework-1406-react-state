@@ -1,6 +1,7 @@
-import { useState } from "react";
+import React, { useState,useEffect } from "react";
 import { v4 as uuidv4 } from "uuid";
 import "./App.css";
+
 
 // button-group
 const buttons = [
@@ -30,15 +31,25 @@ const toDoItems = [
   {
     key: uuidv4(),
     label: "Generate Value",
+
   },
 ];
-
+const getFromLocalItems=()=>{
+  let list = localStorage.getItem('items');
+  console.log(list);
+  if(list){
+    return JSON.parse(localStorage.getItem('items'))
+  }
+  else{
+    return [];
+  }
+}
 // helpful links:
 // useState crash => https://blog.logrocket.com/a-guide-to-usestate-in-react-ecb9952e406c/
 function App() {
   const [itemToAdd, setItemToAdd] = useState("");
   //arrow declaration => expensive computation ex: API calls
-  const [items, setItems] = useState(() => toDoItems);
+  const [items, setItems] = useState(getFromLocalItems());
 
   const [filterType, setFilterType] = useState("");
 
@@ -129,6 +140,9 @@ function App() {
       :items.filter((item) => item.done)
   const searchFiltered = filteredItems.filter((item)=>item.label.toLowerCase().includes(search.toLowerCase()));
 
+  useEffect(() => {
+    localStorage.setItem('items', JSON.stringify(items));
+  }, [items]);
   return (
     <div className="todo-app">
       {/* App-header */}
@@ -169,7 +183,7 @@ function App() {
         {searchFiltered.length > 0 &&
           searchFiltered.map((item) => (
             <li key={item.key} className="list-group-item">
-              <span className={`todo-list-item${item.done ? " done" : "" } ${item.status ? "text-info": ""}`}>
+              <span className={`todo-list-item ${item.done ? " done" : "" } ${item.status ? "text-info": ""}`}>
                 <span
                   className="todo-list-item-label"
                   onClick={() => handleItemDone(item)}
